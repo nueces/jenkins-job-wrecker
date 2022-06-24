@@ -9,7 +9,7 @@ def get_bool(txt):
 
 def gen_raw(xml, parent):
     raw = {}
-    raw['xml'] = ET.tostring(xml)
+    raw['xml'] = ET.tostring(xml, encoding='unicode')
     parent.append({'raw': raw})
 
 
