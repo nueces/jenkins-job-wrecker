@@ -320,3 +320,15 @@ def leastloaddisabledproperty(top, parent):
     parent.append({'least-load': least_load})
 
 
+def ratelimitbranchpropertyjobpropertyimpl(top, parent):
+    rate_limit = {}
+    for child in top:
+        if child.tag == 'durationName':
+            rate_limit['time-period'] = child.text
+        elif child.tag == 'count':
+            rate_limit['number-of-builds'] = int(child.text)
+        elif child.tag == 'userBoost':
+            rate_limit['skip-rate-limit'] = get_bool(child.text)
+        else:
+            raise NotImplementedError("cannot handle XML %s" % child.tag)
+    parent.append({'branch-api': rate_limit})
