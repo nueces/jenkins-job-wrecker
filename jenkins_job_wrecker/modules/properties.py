@@ -137,17 +137,31 @@ def throttlejobproperty(top, parent):
     throttle = {}
     for child in top:
         if child.tag == 'maxConcurrentPerNode':
-            throttle['max-per-node'] = child.text
+            throttle['max-per-node'] = int(child.text)
         elif child.tag == 'maxConcurrentTotal':
-            throttle['max-total'] = child.text
+            throttle['max-total'] = int(child.text)
         elif child.tag == 'throttleOption':
             throttle['option'] = child.text
         elif child.tag == 'throttleEnabled':
             throttle['enabled'] = get_bool(child.text)
         elif child.tag == 'categories':
             throttle['categories'] = []
+            for grandchild in child:
+                if grandchild.tag == "string":
+                    throttle['categories'].append(grandchild.text)
         elif child.tag == 'configVersion':
             pass  # assigned by jjb
+        elif child.tag == 'limitOneJobWithMatchingParams':
+            throttle['parameters-limit'] = child.text
+        elif child.tag == 'matrixOptions':
+            for grandchild in child:
+                if grandchild.tag == "throttleMatrixBuilds":
+                    throttle['matrix-builds'] = get_bool(grandchild.text)
+                elif grandchild.tag == "throttleMatrixConfigurations":
+                    throttle['matrix-configs'] = get_bool(grandchild.text)
+        elif child.tag == 'paramsToUseForLimit':
+            if child.text:
+                throttle['parameters-check-list'] = re.split(r"[\s,]", child.text)
         else:
             raise NotImplementedError("cannot handle XML %s" % child.tag)
 
