@@ -1,5 +1,6 @@
 # encoding=utf8
 import jenkins_job_wrecker.modules.base
+from jenkins_job_wrecker.helpers import get_bool
 
 
 class Buildwrappers(jenkins_job_wrecker.modules.base.Base):
@@ -17,17 +18,20 @@ def envinjectpasswordwrapper(top, parent):
     inject = {}
     for element in top:
         if element.tag == 'injectGlobalPasswords':
-            inject['global'] = (element.text == 'true')
+            inject['global'] = get_bool(element.text)
         elif element.tag == 'maskPasswordParameters':
-            inject['mask-password-params'] = (element.text == 'true')
+            inject['mask-password-params'] = get_bool(element.text)
         elif element.tag == 'passwordEntries':
-            if len(list(element)) > 0:
-                raise NotImplementedError('TODO: implement handling '
-                                          'here')
+            inject['job-passwords'] = []
+            for sub_element in element:
+                inject['job-passwords'].append({
+                    "name": sub_element.find("name").text,
+                    "password": sub_element.find("value").text,
+                })
         else:
             raise NotImplementedError("cannot handle "
                                       "XML %s" % element.tag)
-    parent.append({'inject': inject})
+    parent.append({'inject-passwords': inject})
 
 
 def envinjectbuildwrapper(top, parent):
