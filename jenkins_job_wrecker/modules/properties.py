@@ -298,3 +298,25 @@ def rebuildsettings(top, parent):
 
 def diskusageproperty(top, parent):
     parent.append('disk-usage')
+
+
+def naginatoroptoutproperty(top, parent):
+    naginator_opt_out = {}
+    for child in top:
+        if child.tag == 'optOut':
+            naginator_opt_out['opt-out'] = get_bool(child.text)
+        else:
+            raise NotImplementedError("cannot handle XML %s" % child.tag)
+    parent.append({'naginator-opt-out': naginator_opt_out})
+
+
+def leastloaddisabledproperty(top, parent):
+    least_load = {}
+    for child in top:
+        if child.tag == 'leastLoadDisabled':
+            least_load['disabled'] = get_bool(child.text)
+        else:
+            raise NotImplementedError("cannot handle XML %s" % child.tag)
+    parent.append({'least-load': least_load})
+
+
