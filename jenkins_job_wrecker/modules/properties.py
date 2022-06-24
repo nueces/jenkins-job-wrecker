@@ -294,3 +294,7 @@ def rebuildsettings(top, parent):
         else:
             raise NotImplementedError('Unsupported tag')
     parent.append({'rebuild': rebuild})
+
+
+def diskusageproperty(top, parent):
+    parent.append('disk-usage')
