@@ -1,5 +1,6 @@
 # encoding=utf8
 import argparse
+import glob
 from argparse import ArgumentDefaultsHelpFormatter
 import errno
 import logging
@@ -129,6 +130,12 @@ def parse_args(args):
         help='XML file to translate'
     )
     parser.add_argument(
+        '-j', '--jobs-dir',
+        help="folder to read for job definitions"
+             " must follow the structure: `jobs_dir/job_name/config.xml`."
+             " job names are inferred from dir names."
+    )
+    parser.add_argument(
         '-s', '--jenkins-server',
         help='Jenkins server to query'
     )
@@ -180,18 +187,20 @@ def main():
     # -f and -n
     # -s and -n/-u
     # -s (without -n means "all jobs on the server")
-    # Choose either -f or -s ...
-    if not args.jenkins_server and not args.filename:
-        log.critical('Choose an XML file (-f) or Jenkins URL (-s).')
+    # Choose either -f or -j or -s...
+    if not args.jenkins_server and not args.jobs_dir and not args.filename:
+        log.critical('Choose one input, an XML file (-f),'
+                     ' a Jobs Folder (-j), or Jenkins URL (-s).')
         exit(1)
 
-    # ... but not both -f and -s.
-    if args.jenkins_server and args.filename:
-        log.critical('Choose either an XML file (-f) or Jenkins URL (-s).')
+    # ... but not more than one, -f xor -j xor -s.
+    if not (bool(args.jenkins_server) ^ bool(args.jobs_dir) ^ bool(args.filename)):
+        log.critical('Choose only one input, an XML file (-f),'
+                     ' a Jobs Folder (-j), or Jenkins URL (-s).')
         exit(1)
 
     # -f requires -n
-    if args.filename and not args.name and not args.view:
+    if args.filename and not args.name and not args.view and not args.autoname:
         log.critical('Choose a job name (-n) or a view name (-u) for the job'
                      ' in this file.')
         exit(1)
@@ -222,6 +231,37 @@ def main():
         output_file = open(yaml_filename, 'w')
         output_file.write(yaml)
         output_file.close()
+
+    if args.jobs_dir:
+        pattern = os.path.join(args.jobs_dir, '*', 'config.xml')
+        for filename in glob.glob(pattern):
+            fullname = os.path.basename(os.path.dirname(filename))
+            log.info('looking up %s "%s"' % ('job', fullname))
+            # Get a job's XML
+            root = get_xml_root(filename=filename)
+            try:
+                yaml = root_to_yaml(root, fullname, args.ignore_actions_tag)
+            except AttributeError:
+                # We are processing files in batch, so don't interrupt
+                # the whole execution, instead log the error and continue.
+                log.warning("filename %s was not processed correctly."
+                            " You must validate that file again." % filename)
+                continue
+
+            # Create output directory structure where needed
+            yaml_filename = os.path.join(args.output_dir, fullname, 'job.yml')
+            path = os.path.dirname(yaml_filename)
+            try:
+                os.makedirs(path)
+            except OSError as exc:  # Python >2.5
+                if exc.errno == errno.EEXIST and os.path.isdir(path):
+                    pass
+                else:
+                    raise
+            # Write to output file
+            output_file = open(yaml_filename, 'w')
+            output_file.write(yaml)
+            output_file.close()
 
     # -s requires -n
     if args.jenkins_server:
