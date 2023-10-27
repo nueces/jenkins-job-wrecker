@@ -1,4 +1,5 @@
 # encoding=utf8
+import re
 import jenkins_job_wrecker.modules.base
 from jenkins_job_wrecker.helpers import get_bool, gen_raw
 from jenkins_job_wrecker.modules.triggers import Triggers
@@ -137,17 +138,31 @@ def throttlejobproperty(top, parent):
     throttle = {}
     for child in top:
         if child.tag == 'maxConcurrentPerNode':
-            throttle['max-per-node'] = child.text
+            throttle['max-per-node'] = int(child.text)
         elif child.tag == 'maxConcurrentTotal':
-            throttle['max-total'] = child.text
+            throttle['max-total'] = int(child.text)
         elif child.tag == 'throttleOption':
             throttle['option'] = child.text
         elif child.tag == 'throttleEnabled':
             throttle['enabled'] = get_bool(child.text)
         elif child.tag == 'categories':
             throttle['categories'] = []
+            for grandchild in child:
+                if grandchild.tag == "string":
+                    throttle['categories'].append(grandchild.text)
         elif child.tag == 'configVersion':
             pass  # assigned by jjb
+        elif child.tag == 'limitOneJobWithMatchingParams':
+            throttle['parameters-limit'] = child.text
+        elif child.tag == 'matrixOptions':
+            for grandchild in child:
+                if grandchild.tag == "throttleMatrixBuilds":
+                    throttle['matrix-builds'] = get_bool(grandchild.text)
+                elif grandchild.tag == "throttleMatrixConfigurations":
+                    throttle['matrix-configs'] = get_bool(grandchild.text)
+        elif child.tag == 'paramsToUseForLimit':
+            if child.text:
+                throttle['parameters-check-list'] = re.split(r"[\s,]", child.text)
         else:
             raise NotImplementedError("cannot handle XML %s" % child.tag)
 
@@ -280,3 +295,41 @@ def rebuildsettings(top, parent):
         else:
             raise NotImplementedError('Unsupported tag')
     parent.append({'rebuild': rebuild})
+
+
+def diskusageproperty(top, parent):
+    parent.append('disk-usage')
+
+
+def naginatoroptoutproperty(top, parent):
+    naginator_opt_out = {}
+    for child in top:
+        if child.tag == 'optOut':
+            naginator_opt_out['opt-out'] = get_bool(child.text)
+        else:
+            raise NotImplementedError("cannot handle XML %s" % child.tag)
+    parent.append({'naginator-opt-out': naginator_opt_out})
+
+
+def leastloaddisabledproperty(top, parent):
+    least_load = {}
+    for child in top:
+        if child.tag == 'leastLoadDisabled':
+            least_load['disabled'] = get_bool(child.text)
+        else:
+            raise NotImplementedError("cannot handle XML %s" % child.tag)
+    parent.append({'least-load': least_load})
+
+
+def ratelimitbranchpropertyjobpropertyimpl(top, parent):
+    rate_limit = {}
+    for child in top:
+        if child.tag == 'durationName':
+            rate_limit['time-period'] = child.text
+        elif child.tag == 'count':
+            rate_limit['number-of-builds'] = int(child.text)
+        elif child.tag == 'userBoost':
+            rate_limit['skip-rate-limit'] = get_bool(child.text)
+        else:
+            raise NotImplementedError("cannot handle XML %s" % child.tag)
+    parent.append({'branch-api': rate_limit})

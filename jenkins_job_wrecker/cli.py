@@ -109,7 +109,7 @@ def root_to_yaml(root, name, ignore_actions=False):
             job['project-type'] = 'maven'
 
         raw = {}
-        raw['xml'] = ET.tostring(root)
+        raw['xml'] = ET.tostring(root, encoding='unicode')
         job['xml'] = {'raw': raw}
 
     return yaml.dump(build, default_flow_style=False, default_style=None)

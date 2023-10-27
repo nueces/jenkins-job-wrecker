@@ -265,3 +265,16 @@ def ghprbtrigger(top, parent):
             ghpr['auth-id'] = child.text
 
     parent.append({'github-pull-request': ghpr})
+
+
+def parameterizedtimertrigger(top, parent):
+    param_timer = {}
+    for child in top:
+        if child.tag == "spec":
+            param_timer["spec"] = child.text
+        elif child.tag == "parameterizedSpecification":
+            param_timer["cron"] = child.text
+        else:
+            raise NotImplementedError('cannot handle parmeterized timer trigger '
+                                      'setting %s' % child.tag)
+    parent.append({"parameterized-timer": param_timer})
