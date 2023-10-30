@@ -6,6 +6,7 @@ import errno
 import logging
 import jenkins
 import os
+import re
 import sys
 import textwrap
 from jenkins_job_wrecker.modules.handlers import Handlers
@@ -27,6 +28,19 @@ else:
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger('jjwrecker')
 
+
+def normalize_name(job_name: str) -> str:
+    """
+    Replace any non allowed char for a dash/hyphens
+    :return: normalized name
+    """
+    name = re.sub(r'[^a-zA-Z0-9]', "-", job_name.lower())
+    # replace two o more consecutive hyphens for one
+    name = re.sub(r'-{2,}', '-', name)
+    # remove hyphens at the end of the name
+    name = re.sub(r'-$', '', name)
+
+    return name
 
 def get_str_presenter(should_replace_tabs=False):
     def str_presenter(dumper, data):
@@ -144,6 +158,12 @@ def parse_args(args):
         help='Name of a job'
     )
     parser.add_argument(
+        '-z', '--normalize-name',
+        help='Sanitize job names. Only lowercase, numbers, and dash are allowed.'
+             ' Ignored if the name is set via the -n/--name option',
+        action='store_true', default=True,
+    )
+    parser.add_argument(
         '-u', '--view',
         help='Name of a view'
     )
@@ -239,6 +259,8 @@ def main():
             log.info('looking up %s "%s"' % ('job', fullname))
             # Get a job's XML
             root = get_xml_root(filename=filename)
+            if args.normalize_name:
+                fullname = normalize_name(fullname)
             try:
                 yaml = root_to_yaml(root, fullname, args.ignore_actions_tag)
             except AttributeError:
