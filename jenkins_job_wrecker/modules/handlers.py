@@ -201,7 +201,7 @@ def definition(top, parent):
             parent.append(['pipeline-scm', definition])
         elif top.attrib['class'] == 'org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition':
             # Using DSL (passing raw pipeline script)
-            for child in top.getchildren():
+            for child in list(top):
                 if child.tag == 'script':
                     parent.append(['dsl', child.text])
                 elif child.tag == 'sandbox':

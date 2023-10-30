@@ -200,7 +200,7 @@ def main():
         exit(1)
 
     # -f requires -n
-    if args.filename and not args.name and not args.view and not args.autoname:
+    if args.filename and not args.name and not args.view:
         log.critical('Choose a job name (-n) or a view name (-u) for the job'
                      ' in this file.')
         exit(1)
