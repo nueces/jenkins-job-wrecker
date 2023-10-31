@@ -31,9 +31,11 @@ def copyartifact(child, parent):
         elif copy_element.tag == 'filter':
             copyartifact[copy_element.tag] = copy_element.text
         elif copy_element.tag == 'target':
-            copyartifact[copy_element.tag] = copy_element.text
+            if copy_element.text:
+                copyartifact[copy_element.tag] = copy_element.text
         elif copy_element.tag == 'excludes':
-            copyartifact['exclude-pattern'] = copy_element.text
+            if copy_element.text:
+                copyartifact['exclude-pattern'] = copy_element.text
         elif copy_element.tag == 'selector':
             select = copy_element.attrib['class']
             select = select.replace('hudson.plugins.copyartifact.', '')
