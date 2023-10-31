@@ -14,7 +14,7 @@ from jenkins_job_wrecker.modules.listview import Listview
 from jenkins_job_wrecker.registry import Registry
 import xml.etree.ElementTree as ET
 import yaml
-from jenkins_job_wrecker.helpers import replace_tab
+from jenkins_job_wrecker.helpers import gen_raw, replace_tab
 
 PY2 = sys.version_info[0] == 2
 if PY2:
@@ -123,9 +123,8 @@ def root_to_yaml(root, name, ignore_actions=False):
         if 'maven' in root.tag:
             job['project-type'] = 'maven'
 
-        raw = {}
-        raw['xml'] = ET.tostring(root, encoding='unicode')
-        job['xml'] = {'raw': raw}
+        gen_raw(root, job)
+        build.append({'job': job})
 
     return yaml.dump(build, default_flow_style=False, default_style=None)
 
