@@ -333,3 +333,17 @@ def ratelimitbranchpropertyjobpropertyimpl(top, parent):
         else:
             raise NotImplementedError("cannot handle XML %s" % child.tag)
     parent.append({'branch-api': rate_limit})
+
+
+def jobinclusionjobproperty(top, parent):
+    # jenkins.advancedqueue.jobinclusion.strategy.JobInclusionJobProperty
+    job_inclusion = {}
+    for child in top:
+        if child.tag == 'useJobGroup':
+            job_inclusion['use-job-group'] = get_bool(child.text)
+        elif child.tag == 'jobGroupName':
+            job_inclusion['job-group-name'] = child.text
+        else:
+            raise NotImplementedError("cannot handle XML %s" % child.tag)
+
+    parent.append({'job-inclusion': job_inclusion})

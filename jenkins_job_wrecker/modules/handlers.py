@@ -213,3 +213,9 @@ def definition(top, parent):
     reg = Registry()
     handlers = Handlers(reg)
     handlers.gen_yml(definition, top)
+
+
+# MultiJob projects
+# <pollSubjobs>false</pollSubjobs>
+def pollsubjobs(top, parent):
+    parent.append(['poll-subjobs', get_bool(top.text)])

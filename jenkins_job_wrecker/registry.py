@@ -37,7 +37,9 @@ class Registry(object):
                            'com.cloudbees.plugins.flow.BuildFlow': 'flow',
                            'flow-definition': 'pipeline',
                            'com.cloudbees.hudson.plugins.folder.Folder': 'folder',
-                           'hudson.model.ListView': 'listview'}
+                           'hudson.model.ListView': 'listview',
+                           'com.tikal.jenkins.plugins.multijob.MultiJobProject': 'multijob',
+                           }
             for item in self._get_entry_points('jenkins_job_wrecker.projects'):
                 valid_types.update(item)
             self.project_types.update(valid_types)

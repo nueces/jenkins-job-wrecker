@@ -1,5 +1,6 @@
 # encoding=utf8
 import jenkins_job_wrecker.modules.base
+from jenkins_job_wrecker.helpers import get_bool, gen_raw
 
 
 class Builders(jenkins_job_wrecker.modules.base.Base):
@@ -122,3 +123,63 @@ def buildnameupdater(child, parent):
                                       "XML %s" % build_name_element.tag)
 
     parent.append({'build-name-setter': build_name})
+
+
+def multijobbuilder(child, parent):
+    multijob = {}
+    for element in child:
+        if element.tag == "phaseName":
+            multijob["name"] = element.text
+        elif element.tag == "continuationCondition":
+            multijob["condition"] = element.text
+        elif element.tag == "executionType":
+            multijob["execution-type"] = element.text
+        elif element.tag == "phaseJobs":
+            multijob['projects'] = []
+            for p_element in element:
+                config = {}
+                for cfg_element in p_element:
+                    if cfg_element.tag == 'jobName':
+                        config['name'] = cfg_element.text
+                    elif cfg_element.tag == 'jobAlias':
+                        if cfg_element.text:
+                            config['alias'] = cfg_element.text
+                    elif cfg_element.tag == 'currParams':
+                        config['current-parameters'] = get_bool(cfg_element.text)
+                    elif cfg_element.tag == 'aggregatedTestResults':
+                        config['aggregated-test-results'] = get_bool(cfg_element.text)
+                    elif cfg_element.tag == 'exposedSCM':
+                        config['exposed-scm'] = cfg_element.text
+                    elif cfg_element.tag == 'disableJob':
+                        config['disable-job'] = get_bool(cfg_element.text)
+                    elif cfg_element.tag == 'parsingRulesPath':
+                        if cfg_element.text:
+                            config['parsing-rule-path'] = cfg_element.text
+                    elif cfg_element.tag == 'maxRetries':
+                        config['max-retries'] = int(cfg_element.text)
+                    elif cfg_element.tag == 'enableRetryStrategy':
+                        config['enable-retry-strategy'] = get_bool(cfg_element.text)
+                    elif cfg_element.tag == 'enableCondition':
+                        config['enable-condition'] = get_bool(cfg_element.text)
+                    elif cfg_element.tag == 'abortAllJob':
+                        config['abort-all-job'] = get_bool(cfg_element.text)
+                    elif cfg_element.tag == 'condition':
+                        if cfg_element.text:
+                            config['condition'] = cfg_element.text
+                    elif cfg_element.tag == 'configs':
+                        config['configs'] = []
+                        gen_raw(element, config['configs'])
+                    elif cfg_element.tag == 'killPhaseOnJobResultCondition':
+                        config['kill-phase-on-job-result-condition'] = cfg_element.text
+                    elif cfg_element.tag == 'buildOnlyIfSCMChanges':
+                        config['build-only-if-scm-change'] = get_bool(cfg_element.text)
+                    elif cfg_element.tag == 'applyConditionOnlyIfNoSCMChanges':
+                        config['apply-condition-only-of-no-scm-change'] = get_bool(cfg_element.text)
+                    else:
+                        raise NotImplementedError("cannot handle XML %s" % cfg_element.tag)
+
+                multijob['projects'].append(config)
+        else:
+            raise NotImplementedError("cannot handle XML %s" % element.tag)
+
+    parent.append({'multijob': multijob})
