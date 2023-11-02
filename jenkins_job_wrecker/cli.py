@@ -14,7 +14,7 @@ from jenkins_job_wrecker.modules.listview import Listview
 from jenkins_job_wrecker.registry import Registry
 import xml.etree.ElementTree as ET
 import yaml
-from jenkins_job_wrecker.helpers import gen_raw, replace_tab
+from jenkins_job_wrecker.helpers import replace_tab
 
 PY2 = sys.version_info[0] == 2
 if PY2:
@@ -39,7 +39,6 @@ def normalize_name(job_name: str) -> str:
     name = re.sub(r'-{2,}', '-', name)
     # remove hyphens at the end of the name
     name = re.sub(r'-$', '', name)
-
     return name
 
 def get_str_presenter(should_replace_tabs=False):
@@ -123,7 +122,11 @@ def root_to_yaml(root, name, ignore_actions=False):
         if 'maven' in root.tag:
             job['project-type'] = 'maven'
 
-        gen_raw(root, job)
+        # this is similar to what the helpers.gen_raw function does
+        # but the job here do es not have the same structure that the function spect.
+        raw = {}
+        raw['xml'] = ET.tostring(root, encoding='unicode')
+        job['xml'] = {'raw': raw}
         build.append({'job': job})
 
     return yaml.dump(build, default_flow_style=False, default_style=None)
